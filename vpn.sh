@@ -1,33 +1,36 @@
 #!/bin/bash
 set -e
 
-server_type=WireGuard
 server_pos=nl3
+cmd=xdg-open
+file_path=~/Downloads/wg.conf
 
-while getopts ":t:p:" opt; do
+while getopts ":s:c:f:" opt; do
   case ${opt} in
-    t )
-      server_type="$OPTARG" ;;
-    p )
+    s )
       server_pos="$OPTARG" ;;
+    c )
+      cmd="$OPTARG" ;;
+    f )
+      file_path="$OPTARG" ;;
   esac
 done
 
-link_cmd=xdg-open
-if ! command -v $link_cmd &> /dev/null; then
-  link_cmd=echo
+if ! command -v $cmd &> /dev/null; then
+  cmd=echo
 fi
 
-eval "$link_cmd 'https://www.vpnjantit.com/create-free-account?server=$server_pos&type=$server_type' 2> /dev/null"
+eval "$cmd 'https://www.vpnjantit.com/create-free-account?server=$server_pos&type=WireGuard' 2> /dev/null"
 
-echo "Save profile to ~/Downloads/ as 'wg[0-9]*.conf'"
+echo "Save profile to $file_path"
 echo "Press any key to continue..."
 read -sn1
 
-find_cmd="find ~/Downloads/ -regex '.*/wg[0-9]*.conf' -type f"
-if [ $(eval "$find_cmd" | wc -l) -ne 1 ]; then
-    echo "Multiple matches (or none) :("
+if [ ! -f "$file_path" ]; then
+    echo -e "\e[31;1mError:\e[0m File not found :("
     exit 1
 fi
 
-eval "$find_cmd -exec sudo mv {} /etc/wireguard/last.conf \;"
+sudo mv "$file_path" /etc/wireguard/last.conf
+
+echo -e "\e[32;1mSuccess\e[0m"
